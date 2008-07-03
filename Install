@@ -1,0 +1,18 @@
+#!/bin/csh
+
+#
+# Install
+#
+cd `dirname $0` && source ./Configuration
+
+if ( ! -d ${EMAGELOAD_OUTPUTDIR} ) then
+	mkdir -p ${EMAGELOAD_OUTPUTDIR}
+endif
+
+if ( ! -d ${EMAGELOAD_LOGDIR} ) then
+	mkdir -p ${EMAGELOAD_LOGDIR}
+endif
+
+if ( ! -d ${EMAGELOAD_RPTDIR} ) then
+	mkdir -p ${EMAGELOAD_RPTDIR}
+endif

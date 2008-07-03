@@ -1,0 +1,51 @@
+#!/bin/sh
+
+#
+# Configuration.default
+#
+
+#
+#  If the MGICONFIG environment variable does not have a local override,
+#  use the default "live" settings.
+#
+if [ "${MGICONFIG}" = "" ]
+then
+    MGICONFIG=/usr/local/mgi/live/mgiconfig
+    export MGICONFIG
+fi
+
+. ${MGICONFIG}/master.config.sh
+
+#
+# Directory paths
+#
+EMAGELOAD_DATADIR=/data/loads/emage/emageload
+EMAGELOAD_INPUTDIR=/data/downloads/ftp.hgu.mrc.ac.uk/pub/MouseAtlas/Support/MGI
+EMAGELOAD_OUTPUTDIR=${EMAGELOAD_DATADIR}/output
+EMAGELOAD_LOGDIR=${EMAGELOAD_DATADIR}/logs
+EMAGELOAD_RPTDIR=${EMAGELOAD_DATADIR}/reports
+
+export EMAGELOAD_DATADIR EMAGELOAD_INPUTDIR EMAGELOAD_OUTPUTDIR
+export EMAGELOAD_LOGDIR EMAGELOAD_RPTDIR
+
+#
+# Input/Output files
+#
+EMAGELOAD_INPUTFILE=${EMAGELOAD_INPUTDIR}/emageListForGXD.csv
+EMAGELOAD_TEMP_BCPFILE=${EMAGELOAD_OUTPUTDIR}/emage_data.bcp
+EMAGELOAD_ACC_BCPFILE=${EMAGELOAD_OUTPUTDIR}/ACC_Accession.bcp
+EMAGELOAD_LOGFILE=${EMAGELOAD_LOGDIR}/emageload.log
+EMAGELOAD_RPTFILE=${EMAGELOAD_RPTDIR}/emageload.rpt
+
+export EMAGELOAD_INPUTFILE EMAGELOAD_TEMP_BCPFILE EMAGELOAD_ACC_BCPFILE
+export EMAGELOAD_LOGFILE EMAGELOAD_RPTFILE
+
+#
+# Miscellaneous settings
+#
+EMAGE_TEMP_TABLE=EMAGE_Data
+EMAGE_LOGICAL_DB=EMAGE
+EMAGE_MGITYPE="Image Pane"
+EMAGE_CREATED_BY="EMAGE Load"
+
+export EMAGE_TEMP_TABLE EMAGE_LOGICAL_DB EMAGE_MGITYPE EMAGE_CREATED_BY
