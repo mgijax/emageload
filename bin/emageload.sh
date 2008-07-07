@@ -16,10 +16,18 @@
 #
 #      See the configuration files
 #
-#  Inputs:  None
+#  Inputs:
+#
+#      - Tab-delimited input file (${EMAGELOAD_INPUTFILE}) with the following
+#        fields:
+#
+#          1) EMAGE ID
+#          2) Figure/pane label
+#          3) MGI ID (for the assay)
 #
 #  Outputs:
 #
+#      - Translated Input File (${EMAGELOAD_LOAD_INPUTFILE})
 #      - Log file (${EMAGELOAD_LOGFILE})
 #
 #  Exit Codes:
@@ -33,13 +41,15 @@
 #
 #      This script will perform following steps:
 #
-#      1) Create the temp table for the input data.
-#      2) Call the Python script (emageload.py) to create a bcp file with
+#      1) Remove any duplicate records from the input file and remove the
+#         text 'Figure ' from the figure label (e.g. 'Figure 1A' --> '1A').
+#      2) Create the temp table for the input data.
+#      3) Call the Python script (emageload.py) to create a bcp file with
 #         EMAGE associations and a discrepancy report for input records that
 #         could not be processed.
-#      3) Drop the temp table.
-#      4) Delete the existing EMAGE associations.
-#      5) Load the bcp file into the ACC_Accession table to establish the
+#      4) Drop the temp table.
+#      5) Delete the existing EMAGE associations.
+#      6) Load the bcp file into the ACC_Accession table to establish the
 #         new EMAGE associations.
 #
 #  Notes:  None
@@ -68,6 +78,20 @@ touch ${LOG}
 #
 TMP_RC=/tmp/`basename $0`.$$
 trap "rm -f ${TMP_RC}" 0 1 2 15
+
+#
+# Make sure the input file exists.  Perform a unique sort on it to remove
+# any possible duplicates and remove the 'Figure ' text for the figure label.
+# This text is not stored in the database, so it would fail on join
+# conditions.  The translated file will be used as input by the load.
+#
+if [ ! -f ${EMAGELOAD_INPUTFILE} ]
+then
+    echo "Missing input file: ${EMAGELOAD_INPUTFILE}" | tee -a ${LOG}
+    exit 1
+fi
+rm -f ${EMAGELOAD_LOAD_INPUTFILE}
+sort -u ${EMAGELOAD_INPUTFILE} | sed 's/Figure //' > ${EMAGELOAD_LOAD_INPUTFILE}
 
 #
 # Create the temp table for the input data.
@@ -111,11 +135,11 @@ echo "Create the EMAGE association file and discrepancy report" | tee -a ${LOG}
 { ./emageload.py 2>&1; echo $? > ${TMP_RC}; } >> ${LOG}
 if [ `cat ${TMP_RC}` -ne 0 ]
 then
-    echo 'EMAGE load failed' | tee -a ${LOG}
+    echo "EMAGE load failed" | tee -a ${LOG}
     QUIT=1
 elif [ ! -s ${EMAGELOAD_ACC_BCPFILE} ]
 then
-    echo 'The association file is empty' | tee -a ${LOG}
+    echo "The association file is empty" | tee -a ${LOG}
     QUIT=1
 else
     QUIT=0

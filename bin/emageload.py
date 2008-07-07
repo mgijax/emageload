@@ -17,7 +17,7 @@
 #
 #      MGD_DBUSER
 #      MGD_DBPASSWORDFILE
-#      EMAGELOAD_INPUTFILE
+#      EMAGELOAD_LOAD_INPUTFILE
 #      EMAGELOAD_RPTFILE
 #      EMAGELOAD_TEMP_BCPFILE
 #      EMAGELOAD_ACC_BCPFILE
@@ -28,7 +28,8 @@
 #
 #  Inputs:
 #
-#      emageListForGXD.csv (Tab-delimited fields)
+#      Tab-delimited input file (${EMAGELOAD_LOAD_INPUTFILE}) with the
+#      following fields:
 #
 #          1) EMAGE ID
 #          2) Figure/pane label
@@ -86,7 +87,7 @@ PREFERRED = '1'
 #
 user = os.environ['MGD_DBUSER']
 passwordFile = os.environ['MGD_DBPASSWORDFILE']
-inputFile = os.environ['EMAGELOAD_INPUTFILE']
+inputFile = os.environ['EMAGELOAD_LOAD_INPUTFILE']
 rptFile = os.environ['EMAGELOAD_RPTFILE']
 tempBCPFile = os.environ['EMAGELOAD_TEMP_BCPFILE']
 accBCPFile = os.environ['EMAGELOAD_ACC_BCPFILE']
