@@ -23,13 +23,14 @@
 #      EMAGELOAD_ACC_BCPFILE
 #      EMAGE_TEMP_TABLE
 #      EMAGE_LOGICAL_DB
-#      EMAGE_MGITYPE
+#      ASSAY_MGITYPE
+#      IMAGE_PANE_MGITYPE
 #      EMAGE_CREATED_BY
 #
 #  Inputs:
 #
-#      Tab-delimited input file (${EMAGELOAD_LOAD_INPUTFILE}) with the
-#      following fields:
+#      - Input file (${EMAGELOAD_LOAD_INPUTFILE}) with the following
+#        tab-delimited fields:
 #
 #          1) EMAGE ID
 #          2) Figure/pane label
@@ -37,12 +38,13 @@
 #
 #  Outputs:
 #
-#      BCP files:
-#          emage_data.bcp
-#          ACC_Accession.bcp
+#      - BCP file (${EMAGELOAD_ACC_BCPFILE}) for the ACC_Accession table
+#        containing the associations between EMAGE IDs and image panes
 #
-#      Discrepancy report:
-#          emageload.rpt
+#      - BCP file (${EMAGELOAD_TEMP_BCPFILE}) for loading the EMAGE data
+#        into the temp table
+#
+#      - Discrepancy report (${EMAGELOAD_RPTFILE})
 #
 #  Exit Codes:
 #
@@ -94,7 +96,8 @@ accBCPFile = os.environ['EMAGELOAD_ACC_BCPFILE']
 
 tempTable = os.environ['EMAGE_TEMP_TABLE']
 logicalDB = os.environ['EMAGE_LOGICAL_DB']
-mgiType = os.environ['EMAGE_MGITYPE']
+assayMGIType = os.environ['ASSAY_MGITYPE']
+ipMGIType = os.environ['IMAGE_PANE_MGITYPE']
 createdBy = os.environ['EMAGE_CREATED_BY']
 
 loadDate = loadlib.loaddate
@@ -109,7 +112,7 @@ timestamp = mgi_utils.date()
 # Throws: Nothing
 #
 def init ():
-    global accKey, logicalDBKey, MGITypeKey, createdByKey
+    global accKey, logicalDBKey, assayMGITypeKey, ipMGITypeKey, createdByKey
 
     db.set_sqlUser(user)
     db.set_sqlPasswordFromFile(passwordFile)
@@ -124,7 +127,10 @@ def init ():
                 'where name = "%s"' % (logicalDB))
 
     cmds.append('select _MGIType_key from ACC_MGIType ' + \
-                'where name = "%s"' % (mgiType))
+                'where name = "%s"' % (assayMGIType))
+
+    cmds.append('select _MGIType_key from ACC_MGIType ' + \
+                'where name = "%s"' % (ipMGIType))
 
     cmds.append('select _User_key from MGI_User ' + \
                 'where name = "%s"' % (createdBy))
@@ -147,13 +153,19 @@ def init ():
         sys.exit(1)
 
     if len(results[2]) == 1:
-        MGITypeKey = results[2][0]['_MGIType_key']
+        assayMGITypeKey = results[2][0]['_MGIType_key']
     else:
-        print 'Cannot determine the MGI Type key for "' + mgiType + '"'
+        print 'Cannot determine the MGI Type key for "' + assayMGIType + '"'
         sys.exit(1)
 
     if len(results[3]) == 1:
-        createdByKey = results[3][0]['_User_key']
+        ipMGITypeKey = results[3][0]['_MGIType_key']
+    else:
+        print 'Cannot determine the MGI Type key for "' + ipMGIType + '"'
+        sys.exit(1)
+
+    if len(results[4]) == 1:
+        createdByKey = results[4][0]['_User_key']
     else:
         print 'Cannot determine the User key for "' + createdBy + '"'
         sys.exit(1)
@@ -299,7 +311,7 @@ def createReport ():
                 'where not exists (select 1 ' + \
                                   'from ACC_Accession a ' + \
                                   'where t.mgiID = a.accID and ' + \
-                                        'a._MGIType_key = 8) ' + \
+                                        'a._MGIType_key = ' + str(assayMGITypeKey) + ') ' + \
                 'order by t.emageID, t.mgiID, t.label')
 
     #
@@ -315,7 +327,7 @@ def createReport ():
                                    'GXD_InSituResultImage ri, ' + \
                                    'IMG_ImagePane ip, IMG_Image i ' + \
                               'where t.mgiID = a2.accID and ' + \
-                                    'a2._MGIType_key = 8 and ' + \
+                                    'a2._MGIType_key = ' + str(assayMGITypeKey) + ' and ' + \
                                     'a2._Object_key = s._Assay_key and ' + \
                                     's._Specimen_key = r._Specimen_key and ' + \
                                     'r._Result_key = ri._Result_key and ' + \
@@ -326,21 +338,24 @@ def createReport ():
 
     results = db.sql(cmds,'auto')
 
+    count = 0
+
     #
     # Write the records to the discrepancy report.
     #
     for r in results[0]:
         fpRptFile.write('%-12s  %-12s  %-25s  %-40s%s' %
             (r['emageID'], r['mgiID'], r['label'], 'MGI ID does not exist for an assay', NL))
+        count = count + 1
 
     for r in results[1]:
         fpRptFile.write('%-12s  %-12s  %-25s  %-40s%s' %
             (r['emageID'], r['mgiID'], r['label'], 'Invalid figure/pane label for the assay', NL))
+        count = count + 1
 
-    fpRptFile.write(NL + 'Number of discrepancies: ' + \
-                    str(len(results[0]) + len(results[1])) + NL)
+    fpRptFile.write(NL + 'Number of discrepancies: ' + str(count) + NL)
 
-    print 'Number of discrepancies: ' + str(len(results[0]) + len(results[1]))
+    print 'Number of discrepancies: ' + str(count)
 
     return
 
@@ -369,7 +384,7 @@ def createBCPFile ():
                      'GXD_InSituResultImage ri, ' + \
                      'IMG_ImagePane ip, IMG_Image i ' + \
                 'where t.mgiID = a.accID and ' + \
-                      'a._MGIType_key = 8 and ' + \
+                      'a._MGIType_key = ' + str(assayMGITypeKey) + ' and ' + \
                       'a._Object_key = s._Assay_key and ' + \
                       's._Specimen_key = r._Specimen_key and ' + \
                       'r._Result_key = ri._Result_key and ' + \
@@ -403,6 +418,10 @@ def createBCPFile ():
         if figureLabel + paneLabel != label:
             continue
 
+        #
+        # Get the prefix and numeric parts of the EMAGE ID and write
+        # a record to the bcp file.
+        #
         (prefixPart,numericPart) = accessionlib.split_accnum(emageID)
 
         fpAccBCPFile.write(str(accKey) + TAB + \
@@ -411,7 +430,7 @@ def createBCPFile ():
                            str(numericPart) + TAB + \
                            str(logicalDBKey) + TAB + \
                            str(imagePaneKey) + TAB + \
-                           str(MGITypeKey) + TAB + \
+                           str(ipMGITypeKey) + TAB + \
                            PRIVATE + TAB + PREFERRED + TAB + \
                            str(createdByKey) + TAB + \
                            str(createdByKey) + TAB + \

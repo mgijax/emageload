@@ -18,8 +18,8 @@
 #
 #  Inputs:
 #
-#      - Tab-delimited input file (${EMAGELOAD_INPUTFILE}) with the following
-#        fields:
+#      - Input file (${EMAGELOAD_INPUTFILE}) with the following
+#        tab-delimited fields:
 #
 #          1) EMAGE ID
 #          2) Figure/pane label
@@ -28,6 +28,7 @@
 #  Outputs:
 #
 #      - Translated Input File (${EMAGELOAD_LOAD_INPUTFILE})
+#
 #      - Log file (${EMAGELOAD_LOGFILE})
 #
 #  Exit Codes:
