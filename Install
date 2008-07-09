@@ -6,6 +6,11 @@
 cd `dirname $0`
 . ./Configuration
 
+if [ ! -d ${EMAGELOAD_INPUTDIR} ]
+then
+    mkdir -p ${EMAGELOAD_INPUTDIR}
+fi
+
 if [ ! -d ${EMAGELOAD_OUTPUTDIR} ]
 then
     mkdir -p ${EMAGELOAD_OUTPUTDIR}
