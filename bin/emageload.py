@@ -265,7 +265,7 @@ def loadTempTable ():
         fpTempBCPFile.write(emageID + TAB + label + TAB + mgiID + NL)
 
         line = fpInputFile.readline()
-        count = 1
+        count += 1
 
     #
     # Close the bcp file.
@@ -346,12 +346,12 @@ def createReport ():
     for r in results[0]:
         fpRptFile.write('%-12s  %-12s  %-25s  %-40s%s' %
             (r['emageID'], r['mgiID'], r['label'], 'MGI ID does not exist for an assay', NL))
-        count = count + 1
+        count += 1
 
     for r in results[1]:
         fpRptFile.write('%-12s  %-12s  %-25s  %-40s%s' %
             (r['emageID'], r['mgiID'], r['label'], 'Invalid figure/pane label for the assay', NL))
-        count = count + 1
+        count += 1
 
     fpRptFile.write(NL + 'Number of discrepancies: ' + str(count) + NL)
 
@@ -437,7 +437,7 @@ def createBCPFile ():
                            loadDate + TAB + \
                            loadDate + NL)
 
-        count = count + 1
+        count += 1
         accKey = accKey + 1
 
     print 'Number of EMAGE associations: ' + str(count)
