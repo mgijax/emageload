@@ -121,7 +121,7 @@ def init ():
     # Get the keys from the database.
     #
     cmds = []
-    cmds.append('select max(_Accession_key) + 1 "_Accession_key" from ACC_Accession')
+    cmds.append('select max(_Accession_key) + 1 as _Accession_key from ACC_Accession')
 
     cmds.append('select _LogicalDB_key from ACC_LogicalDB ' + \
                 'where name = "%s"' % (logicalDB))
@@ -278,7 +278,8 @@ def loadTempTable ():
     print 'Load the temp table with the input data'
     sys.stdout.flush()
 
-    bcpCmd = 'cat %s | bcp tempdb..%s in %s -c -t"%s" -S%s -U%s' % (passwordFile, tempTable, tempBCPFile, TAB, db.get_sqlServer(), db.get_sqlUser())
+    bcpCmd = '${PG_DBUTILS}/bin/bcpin.csh ${PG_DBSERVER} ${PG_DBNAME} %s ${EMAGELOAD_OUTPUTDIR} ${EMAGE_TEMP_TABLE}.bcp "\\t" "\\n" radar' % (tempTable)
+    print bcpCmd
     os.system(bcpCmd)
 
     return
@@ -307,7 +308,7 @@ def createReport ():
     # an assay.
     #
     cmds.append('select t.emageID, t.mgiID, t.label ' + \
-                'from tempdb..' + tempTable + ' t ' + \
+                'from ' + tempTable + ' t ' + \
                 'where not exists (select 1 ' + \
                                   'from ACC_Accession a ' + \
                                   'where t.mgiID = a.accID and ' + \
@@ -319,7 +320,7 @@ def createReport ():
     # exist for the assay.
     #
     cmds.append('select t.emageID, t.mgiID, t.label ' + \
-                'from tempdb..' + tempTable + ' t, ACC_Accession a1 ' + \
+                'from ' + tempTable + ' t, ACC_Accession a1 ' + \
                 'where t.mgiID = a1.accID and ' + \
                       'not exists (select 1 ' + \
                               'from ACC_Accession a2, GXD_Specimen s, ' + \
@@ -333,7 +334,7 @@ def createReport ():
                                     'r._Result_key = ri._Result_key and ' + \
                                     'ri._ImagePane_key = ip._ImagePane_key and ' + \
                                     'ip._Image_key = i._Image_key and ' + \
-                                    'i.figureLabel + ip.paneLabel = t.label) ' + \
+                                    'i.figureLabel || ip.paneLabel = t.label) ' + \
                 'order by t.emageID, t.mgiID, t.label')
 
     results = db.sql(cmds,'auto')
@@ -379,7 +380,7 @@ def createBCPFile ():
     cmds = []
     cmds.append('select distinct t.emageID, ip._ImagePane_key, ' + \
                        'i.figureLabel, ip.paneLabel, t.label ' + \
-                'from tempdb..' + tempTable + ' t, ACC_Accession a, ' + \
+                'from ' + tempTable + ' t, ACC_Accession a, ' + \
                      'GXD_Specimen s, GXD_InSituResult r, ' + \
                      'GXD_InSituResultImage ri, ' + \
                      'IMG_ImagePane ip, IMG_Image i ' + \
@@ -390,7 +391,7 @@ def createBCPFile ():
                       'r._Result_key = ri._Result_key and ' + \
                       'ri._ImagePane_key = ip._ImagePane_key and ' + \
                       'ip._Image_key = i._Image_key and ' + \
-                      'i.figureLabel + ip.paneLabel = t.label ' + \
+                      'i.figureLabel || ip.paneLabel = t.label ' + \
                 'order by t.emageID, ip._ImagePane_key')
 
     results = db.sql(cmds,'auto')
