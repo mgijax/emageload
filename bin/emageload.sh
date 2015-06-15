@@ -150,8 +150,8 @@ date >> ${LOG}
 echo "Drop the temp table (${EMAGE_TEMP_TABLE})" | tee -a ${LOG}
 cat - <<EOSQL | ${PG_DBUTILS}/bin/doisql.csh $0 | tee -a ${LOG}
 
---drop table radar.${EMAGE_TEMP_TABLE}
---;
+drop table radar.${EMAGE_TEMP_TABLE}
+;
 
 EOSQL
 
