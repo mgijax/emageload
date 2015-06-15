@@ -102,6 +102,9 @@ date >> ${LOG}
 echo "Create the temp table (${EMAGE_TEMP_TABLE}) for the input data" | tee -a ${LOG}
 cat - <<EOSQL | ${PG_DBUTILS}/bin/doisql.csh $0 | tee -a ${LOG}
 
+drop table if exists radar.${EMAGE_TEMP_TABLE}
+;
+
 CREATE TABLE radar.${EMAGE_TEMP_TABLE} (
     emageID text not null,
     label text not null,
@@ -141,19 +144,6 @@ then
 else
     QUIT=0
 fi
-
-#
-# Drop the temp table.
-#
-echo "" >> ${LOG}
-date >> ${LOG}
-echo "Drop the temp table (${EMAGE_TEMP_TABLE})" | tee -a ${LOG}
-cat - <<EOSQL | ${PG_DBUTILS}/bin/doisql.csh $0 | tee -a ${LOG}
-
-drop table radar.${EMAGE_TEMP_TABLE}
-;
-
-EOSQL
 
 #
 # Do not attempt to delete/reload the EMAGE associations if there was a
