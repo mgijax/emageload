@@ -334,7 +334,7 @@ def createReport ():
                                     'r._Result_key = ri._Result_key and ' + \
                                     'ri._ImagePane_key = ip._ImagePane_key and ' + \
                                     'ip._Image_key = i._Image_key and ' + \
-                                    'i.figureLabel || ip.paneLabel = t.label) ' + \
+                                    'concat (i.figureLabel::text, ip.paneLabel::text) = rtrim(t.label)) ' + \
                 'order by t.emageID, t.mgiID, t.label')
 
     results = db.sql(cmds,'auto')
@@ -391,7 +391,7 @@ def createBCPFile ():
                       'r._Result_key = ri._Result_key and ' + \
                       'ri._ImagePane_key = ip._ImagePane_key and ' + \
                       'ip._Image_key = i._Image_key and ' + \
-                      'i.figureLabel || ip.paneLabel = t.label ' + \
+                      'concat (i.figureLabel::text, ip.paneLabel::text) = rtrim(t.label) ' + \
                 'order by t.emageID, ip._ImagePane_key')
 
     results = db.sql(cmds,'auto')
@@ -410,14 +410,6 @@ def createBCPFile ():
 
         if paneLabel == None:
             paneLabel = ''
-
-        #
-        # Sybase does not do a case-sensitive search, so we need to make
-        # sure that the labels are the same on the Python side and skip the
-        # ones that don't match.  For example, "1" + "A" != "1a".
-        #
-        if figureLabel + paneLabel != label:
-            continue
 
         #
         # Get the prefix and numeric parts of the EMAGE ID and write
