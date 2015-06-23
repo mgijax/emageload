@@ -278,7 +278,7 @@ def loadTempTable ():
     print 'Load the temp table with the input data'
     sys.stdout.flush()
 
-    bcpCmd = '${PG_DBUTILS}/bin/bcpin.csh ${PG_DBSERVER} ${PG_DBNAME} %s ${EMAGELOAD_OUTPUTDIR} ${EMAGE_TEMP_TABLE}.bcp "\\t" "\\n" radar' % (tempTable)
+    bcpCmd = '${PG_DBUTILS}/bin/bcpin.csh ${MGD_DBSERVER} ${MGD_DBNAME} %s ${EMAGELOAD_OUTPUTDIR} ${EMAGE_TEMP_TABLE}.bcp "\\t" "\\n" radar' % (tempTable)
     print bcpCmd
     os.system(bcpCmd)
 

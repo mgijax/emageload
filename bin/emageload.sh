@@ -173,7 +173,7 @@ EOSQL
 echo "" >> ${LOG}
 date >> ${LOG}
 echo "Load the new EMAGE associations" | tee -a ${LOG}
-${PG_DBUTILS}/bin/bcpin.csh ${PG_DBSERVER} ${PG_DBNAME} ACC_Accession ${EMAGELOAD_OUTPUTDIR} ACC_Accession.bcp "\t" "\n" mgd
+${PG_DBUTILS}/bin/bcpin.csh ${MGD_DBSERVER} ${MGD_DBNAME} ACC_Accession ${EMAGELOAD_OUTPUTDIR} ACC_Accession.bcp "\t" "\n" mgd
 
 date >> ${LOG}
 
