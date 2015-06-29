@@ -100,31 +100,30 @@ sort -u ${EMAGELOAD_INPUTFILE} | sed 's/Figure //' > ${EMAGELOAD_LOAD_INPUTFILE}
 echo "" >> ${LOG}
 date >> ${LOG}
 echo "Create the temp table (${EMAGE_TEMP_TABLE}) for the input data" | tee -a ${LOG}
-cat - <<EOSQL | isql -S${MGD_DBSERVER} -D${MGD_DBNAME} -Umgd_dbo -P`cat ${MGD_DBPASSWORDFILE}` -e  >> ${LOG}
+cat - <<EOSQL | ${PG_DBUTILS}/bin/doisql.csh $0 | tee -a ${LOG}
 
-use tempdb
-go
+drop table if exists radar.${EMAGE_TEMP_TABLE}
+;
 
-create table ${EMAGE_TEMP_TABLE} (
-    emageID varchar(80) not null,
-    label varchar(80) not null,
-    mgiID varchar(80) not null
+CREATE TABLE radar.${EMAGE_TEMP_TABLE} (
+    emageID text not null,
+    label text not null,
+    mgiID text not null
 )
-go
+;
 
-create nonclustered index idx_emageID on ${EMAGE_TEMP_TABLE} (emageID)
-go
+create index idx_emageID on radar.${EMAGE_TEMP_TABLE} (emageID)
+;
 
-create nonclustered index idx_label on ${EMAGE_TEMP_TABLE} (label)
-go
+create index idx_label on radar.${EMAGE_TEMP_TABLE} (label)
+;
 
-create nonclustered index idx_mgiID on ${EMAGE_TEMP_TABLE} (mgiID)
-go
+create index idx_mgiID on radar.${EMAGE_TEMP_TABLE} (mgiID)
+;
 
-grant all on ${EMAGE_TEMP_TABLE} to public
-go
+grant all on radar.${EMAGE_TEMP_TABLE} to public
+;
 
-quit
 EOSQL
 
 #
@@ -147,23 +146,6 @@ else
 fi
 
 #
-# Drop the temp table.
-#
-echo "" >> ${LOG}
-date >> ${LOG}
-echo "Drop the temp table (${EMAGE_TEMP_TABLE})" | tee -a ${LOG}
-cat - <<EOSQL | isql -S${MGD_DBSERVER} -D${MGD_DBNAME} -Umgd_dbo -P`cat ${MGD_DBPASSWORDFILE}` -e  >> ${LOG}
-
-use tempdb
-go
-
-drop table ${EMAGE_TEMP_TABLE}
-go
-
-quit
-EOSQL
-
-#
 # Do not attempt to delete/reload the EMAGE associations if there was a
 # problem creating the assocation file.
 #
@@ -178,18 +160,11 @@ fi
 echo "" >> ${LOG}
 date >> ${LOG}
 echo "Delete the existing EMAGE associations" | tee -a ${LOG}
-cat - <<EOSQL | isql -S${MGD_DBSERVER} -D${MGD_DBNAME} -Umgd_dbo -P`cat ${MGD_DBPASSWORDFILE}` -e >> ${LOG}
+cat - <<EOSQL | ${PG_DBUTILS}/bin/doisql.csh $0 | tee -a ${LOG}
 
-declare @logicalDBKey int
-select @logicalDBKey = _LogicalDB_key
-from ACC_LogicalDB
-where name = 'EMAGE'
+delete from ACC_Accession where _LogicalDB_key = 116
+;
 
-delete from ACC_Accession
-where _LogicalDB_key = @logicalDBKey
-go
-
-quit
 EOSQL
 
 #
@@ -198,7 +173,7 @@ EOSQL
 echo "" >> ${LOG}
 date >> ${LOG}
 echo "Load the new EMAGE associations" | tee -a ${LOG}
-cat ${MGD_DBPASSWORDFILE} | bcp ${MGD_DBNAME}..ACC_Accession in ${EMAGELOAD_ACC_BCPFILE} -c -t\\t -S${MGD_DBSERVER} -U${MGD_DBUSER} >> ${LOG}
+${PG_DBUTILS}/bin/bcpin.csh ${MGD_DBSERVER} ${MGD_DBNAME} ACC_Accession ${EMAGELOAD_OUTPUTDIR} ACC_Accession.bcp "\t" "\n" mgd
 
 date >> ${LOG}
 
